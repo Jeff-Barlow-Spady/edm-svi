@@ -115,7 +115,6 @@ This not only enhances the decision-making process but also underscores the valu
 
 # Score Analysis
 st.header("Score Analysis")
-st.markdown("[Score Analysis Link Placeholder](#)")  # Replace with actual link
 
 # Summary Statistics
 st.subheader("Summary Statistics")
