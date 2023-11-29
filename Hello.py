@@ -6,7 +6,7 @@ import json
 
 # Set Streamlit page configuration
 st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability", page_icon="📊")
-
+st.markdown("""Analysis by Jeff Barlow-Spady""")    # Markdown text
 # Function to map score to color
 def get_color_for_score(score, min_score, max_score):
     """
