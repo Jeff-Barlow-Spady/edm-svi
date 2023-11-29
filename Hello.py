@@ -45,7 +45,7 @@ This application is a working prototype of the Neighborhood Social Vulnerability
 Scoring System. There are currently issues with the tooltips for the hexagon layer.
 Below you will find sliders to alter the map's appearance and filter by score.
 Detailed information about the project can be found near the top of the sidebar - click on 'methodology'.
-"""
+""")
 # Sidebar options
 st.sidebar.title("Options")
 score_range = st.sidebar.slider(
