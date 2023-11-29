@@ -3,11 +3,7 @@ import pydeck as pdk
 import pandas as pd
 import json
 
-st.set_page_config(
-    layout="wide", 
-    page_title="Edmonton Neighbourhood Social Vulnerability",
-    page_icon="📊"
-)
+st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability",page_icon="📊")
 
 # Function to map score to color
 def get_color_for_score(score, min_score, max_score):
@@ -40,8 +36,16 @@ for feature in geojson_data['features']:
 # Join the data with GeoJSON
 #data = data.merge(geojson_df, on='neighbourhood')
 score_map = data.set_index('neighbourhood')['weighted_score'].to_dict()
-st.title("Interactive Geospatial Visualizations")
+st.title("Edmonton Neighbourhood Social Vulnerability")
 
+# Sidebar text
+st.sidebar.markdown(
+"""
+This application is a working prototype of the Neighborhood Social Vulnerability Map and 
+Scoring System. There are currently issues with the tooltips for the hexagon layer.
+Below you will find sliders to alter the map's appearance and filter by score.
+Detailed information about the project can be found near the top of the sidebar - click on 'methodology'.
+"""
 # Sidebar options
 st.sidebar.title("Options")
 score_range = st.sidebar.slider(
@@ -62,12 +66,12 @@ filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_col
 
 # Layer selection with checkboxes
 scatterplot_visible = st.sidebar.checkbox("Show Scatterplot Layer", True)
-hexagon_visible = st.sidebar.checkbox("Show Hexagon Layer", True)
+hexagon_visible = st.sidebar.checkbox("Show Hexagon Layer", False)
 
 # Hexagon Layer Interactivity
 elevation_scale = st.sidebar.slider("Hexagon Elevation Scale", 1, 100, 10)
 elevation_range_max = st.sidebar.slider("Hexagon Elevation Range Max", 100, 5000, 450)
-print(filtered_data.columns)  # Check if 'weighted_score' and 'neighbourhood' are present
+#print(filtered_data.columns)  # Check if 'weighted_score' and 'neighbourhood' are present
 
 # Define Layers
 scatterplot_layer = pdk.Layer(
@@ -100,12 +104,12 @@ hexagon_layer = pdk.Layer(
 view_state = pdk.ViewState(
     latitude=data["latitude"].mean(),
     longitude=data["longitude"].mean(),
-    zoom=10,
-    pitch=15,
+    zoom=9,
+    pitch=10,
 )
 
 map_style = st.selectbox('Select Map Style', [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
-
+st.write('Select your map style from the dropdown menu above.')
 map_view = pdk.Deck(
     map_style=map_style,
     initial_view_state=view_state,
@@ -117,7 +121,6 @@ map_view = pdk.Deck(
     },
 )
 
-st.header("Map Using Weighted Scores")
 st.pydeck_chart(map_view)
 
 st.markdown("**Neighbourhood Information**")
