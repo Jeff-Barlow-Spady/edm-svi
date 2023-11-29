@@ -26,7 +26,7 @@ I commenced with a detailed factor analysis on the standardized variables, which
 This approach was critical in uncovering latent patterns and structures that are not immediately apparent.
 """)
 st.subheader("Figure 1: Scree Plot for 5 Factors")
-st.image("path_to_your_placeholder_image.png") # Replace with actual image path
+st.image("data/Scree.png") # Replace with actual image path
 
 
 # Identification of Significant Factors
@@ -37,7 +37,7 @@ Utilizing scree plots, I meticulously identified the significant factors.
 This step was crucial in ensuring that the core characteristics of the dataset were captured efficiently and accurately.
 """)
 st.subheader("Figure 2: Cumulative Explained Variance by PCA Components")
-st.image("path_to_your_placeholder_image_2.png")  # Replace with actual image path
+st.image("data/PCA.png")  # Replace with actual image path
 
 # Extraction of Feature Importances
 st.header("Extraction of Feature Importances")
@@ -72,9 +72,9 @@ The culmination of this phase was identifying the optimal models and isolating t
 This led to the development of a composite weight for each feature, culminating in a final, weighted score for each neighborhood.
 """)
 st.subheader("Figure 3: Feature Importances from Best XGBoost Model")
-st.image("path_to_your_placeholder_image_3.png")  # Replace with actual image path
+st.image("data/XGB.png")  # Replace with actual image path
 st.subheader("Figure 4: Feature Importances from Random Forest Model")
-st.image("path_to_your_placeholder_image_4.png")  # Replace with actual image path
+st.image("data/RF.png")  # Replace with actual image path
 
 # Visual Data Exploration
 st.header("Visual Data Exploration")
@@ -83,7 +83,7 @@ st.markdown(
 """
 I delved into histograms and density plots of z-score standardized variables, which gave a clear picture of the data point distributions and their nuances.
 """)
-st.image("path_to_your_placeholder_image_5.png")  # Replace with actual image path
+st.image("data/Density.png")  # Replace with actual image path
 
 # Pairwise Scatter Plots Analysis
 st.subheader("Pairwise Scatter Plots Analysis")
@@ -92,7 +92,7 @@ st.markdown(
 An analysis of pairwise scatter plots shed light on correlations and trends. 
 These insights were pivotal in shaping the composite score and understanding the interplay between different variables.
 """)
-st.image("path_to_your_placeholder_image_6.png")  # Replace with actual image path
+st.image("data/Pairplot.png")  # Replace with actual image path
 
 # Project Impact
 st.header("Project Impact")
@@ -119,6 +119,7 @@ st.markdown("[Score Analysis Link Placeholder](#)")  # Replace with actual link
 
 # Summary Statistics
 st.subheader("Summary Statistics")
+
 st.markdown("""
 - **Unweighted Score**:
     - Count: 274 entries
@@ -143,12 +144,18 @@ st.markdown("""
 
 # Visualizations
 st.subheader("Visualizations")
-st.markdown("""
-- **Histograms**: Both unweighted and weighted scores appear to be approximately normally distributed, with a single peak around the mean.
-- **Boxplots**: The boxplots show that the unweighted scores have a wider range and higher median compared to the weighted scores. There are no obvious outliers in either distribution, which suggests that scores are relatively evenly distributed across neighbourhoods.
-- **Scatter Plot**: The scatter plot of weighted vs. unweighted scores indicates a positive relationship between the two, as would be expected since they are likely based on similar underlying data.
+st.image("data/histo.png")
+st.image("data/b_plot.png")
+st.markdown(
+"""
+- **Histograms**: Both unweighted and weighted scores appear to be approximately normally distributed,
+with a single peak around the mean.
+- **Boxplots**: The boxplots show that the unweighted scores have a wider range and higher median compared to the weighted scores. 
+There are no obvious outliers in either distribution, which suggests that scores are relatively evenly distributed across neighbourhoods.
+- **Scatter Plot**: The scatter plot of weighted vs. unweighted scores indicates a positive relationship between the two,
+ as would be expected since they are based on the same data
 """)
-
+st.image("data/weighted_corr.png")
 # Observations
 st.subheader("Observations")
 st.markdown("""
