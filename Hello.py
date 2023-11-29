@@ -1,12 +1,23 @@
+# Import necessary libraries
 import streamlit as st
 import pydeck as pdk
 import pandas as pd
 import json
 
-st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability",page_icon="📊")
+# Set Streamlit page configuration
+st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability", page_icon="📊")
 
 # Function to map score to color
 def get_color_for_score(score, min_score, max_score):
+    """
+    Maps a score to a color based on a given range of scores.
+    Args:
+        score (float): The score to map to a color.
+        min_score (float): The minimum score in the range.
+        max_score (float): The maximum score in the range.
+    Returns:
+        list: A list of RGBA values representing the color.
+    """
     normalized_score = (score - min_score) / (max_score - min_score)
     red = int(255 * normalized_score)
     green = 255 - red
@@ -15,27 +26,31 @@ def get_color_for_score(score, min_score, max_score):
 
 @st.cache_data
 def get_data():
+    """
+    Retrieves the data from a CSV file and caches it for faster access.
+    Returns:
+        pandas.DataFrame: The loaded data.
+    """
     return pd.read_csv('data/neighbourhood_scores_subset.csv')
 
+# Load data and GeoJSON file
 data = get_data()
 geojson_file_path = 'data/new_geom.geojson'
 with open(geojson_file_path) as f:
     geojson_data = json.load(f)
 
-# Create a DataFrame from the GeoJSON properties
-#geojson_df = pd.DataFrame(geojson_data['features'])
-#geojson_df['neighbourhood'] = geojson_df['properties'].apply(lambda x: x['neighbourhood'])
 # Step 2: Color Mapping
+# Apply the color mapping function to the 'weighted_score' column and create a new 'color' column
 data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max()))
 
 # Step 3: Merge Data with GeoJSON
+# Iterate over each feature in the GeoJSON data and add the corresponding color from the data DataFrame
 for feature in geojson_data['features']:
     neighborhood_name = feature['properties']['neighbourhood']
     matching_row = data[data['neighbourhood'] == neighborhood_name].iloc[0]
     feature['properties']['color'] = matching_row['color']
-# Join the data with GeoJSON
-#data = data.merge(geojson_df, on='neighbourhood')
-score_map = data.set_index('neighbourhood')['weighted_score'].to_dict()
+
+# Set up the Streamlit application
 st.title("Edmonton Neighbourhood Social Vulnerability")
 
 # Sidebar text
@@ -46,8 +61,11 @@ Scoring System. There are currently issues with the tooltips for the hexagon lay
 Below you will find sliders to alter the map's appearance and filter by score.
 Detailed information about the project can be found near the top of the sidebar - click on 'methodology'.
 """)
+
 # Sidebar options
 st.sidebar.title("Options")
+
+# Slider to filter weighted scores
 score_range = st.sidebar.slider(
     "Filter Weighted Scores",
     int(data["weighted_score"].min()),
@@ -61,17 +79,17 @@ filtered_data = data[
 ].copy()  # Create a copy of the filtered data
 
 min_score, max_score = score_range
-filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score))
 
+# Apply the color mapping function to the filtered data
+filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score))
 
 # Layer selection with checkboxes
 scatterplot_visible = st.sidebar.checkbox("Show Scatterplot Layer", True)
 hexagon_visible = st.sidebar.checkbox("Show Hexagon Layer", False)
 
 # Hexagon Layer Interactivity
-elevation_scale = st.sidebar.slider("Hexagon Elevation Scale", 1, 100, 10)
-elevation_range_max = st.sidebar.slider("Hexagon Elevation Range Max", 100, 5000, 450)
-#print(filtered_data.columns)  # Check if 'weighted_score' and 'neighbourhood' are present
+elevation_scale = st.sidebar.slider("Adjust Elevation Scale", 1, 100, 10)
+elevation_range_max = st.sidebar.slider("Adjust Height of hex-tiles", 100, 5000, 450)
 
 # Define Layers
 scatterplot_layer = pdk.Layer(
@@ -87,7 +105,7 @@ scatterplot_layer = pdk.Layer(
 
 hexagon_layer = pdk.Layer(
     "HexagonLayer",
-    filtered_data,  # Fix: Provide the filtered_data DataFrame as the data source
+    filtered_data,
     auto_highlight=True,
     get_position=["longitude", "latitude"],
     elevation_scale=elevation_scale,
@@ -108,8 +126,8 @@ view_state = pdk.ViewState(
     pitch=10,
 )
 
-map_style = st.selectbox('Select Map Style', [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
-st.write('Select your map style from the dropdown menu above.')
+map_style = st.selectbox("Select your map style from the dropdown menu above", [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
+
 map_view = pdk.Deck(
     map_style=map_style,
     initial_view_state=view_state,
@@ -121,10 +139,11 @@ map_view = pdk.Deck(
     },
 )
 
+# Render the map
 st.pydeck_chart(map_view)
 
+# Display information about the neighborhoods
 st.markdown("**Neighbourhood Information**")
 st.write(
     f"Displaying data for {len(filtered_data)} neighborhoods using Weighted Scores between {score_range[0]} and {score_range[1]}."
 )
-
