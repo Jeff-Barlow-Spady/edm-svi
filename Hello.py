@@ -3,7 +3,11 @@ import pydeck as pdk
 import pandas as pd
 import json
 
-st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability", page_icon="📊")
+st.set_page_config(
+    layout="wide", 
+    page_title="Edmonton Neighbourhood Social Vulnerability",
+    page_icon="📊"
+)
 
 # Function to map score to color
 def get_color_for_score(score, min_score, max_score):
