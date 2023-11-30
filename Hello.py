@@ -94,6 +94,8 @@ and the filled_polygon is a feature in progress and is not yet working.
 
 On the sidebar you will find sliders to alter the map's appearance and filter by score.
 A link to detailed information about the project can be found near the top of the sidebar - click on 'methodology' to learn more
+
+You will also find a link to download the data used to create the map and the top 15 neighborhoods by weighted score.
 """)
 st.divider()
 # Sidebar options
