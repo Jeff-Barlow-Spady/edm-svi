@@ -73,10 +73,10 @@ st.sidebar.title("Options")
 
 # Slider to filter weighted scores
 score_range = st.sidebar.slider(
-    "Filter Weighted Scores",
-    int(data["weighted_score"].min()),
-    math.ceil(data["weighted_score"].max()),  # Round up the maximum value
-    (int(data["weighted_score"].min()), math.ceil(data["weighted_score"].max())),
+    label="Filter Weighted Scores",
+    min_value=int(data["weighted_score"].min()),
+    max_value=math.ceil(data["weighted_score"].max()),
+    value=(int(data["weighted_score"].min()), math.ceil(data["weighted_score"].max()))  # Set default value to the new maximum score
 )
 st.sidebar.divider()
 # Filter data based on selected score range
