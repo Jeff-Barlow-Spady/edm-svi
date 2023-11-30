@@ -3,10 +3,14 @@ import streamlit as st
 import pydeck as pdk
 import pandas as pd
 import json
+import math
 
 # Set Streamlit page configuration
-st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability", page_icon="📊")
-st.markdown("""Analysis by Jeff Barlow-Spady""")    # Markdown text
+st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability", page_icon="📊", menu_items={
+    "Get Help":'mailto:jeff.barlow.spady@gmail.com', 
+    'report a bug':'mailto:jeff.barlow.spady@gmail.com'
+    })
+
 # Function to map score to color
 def get_color_for_score(score, min_score, max_score):
     """
@@ -52,24 +56,26 @@ for feature in geojson_data['features']:
 
 # Set up the Streamlit application
 st.title("Edmonton Neighbourhood Social Vulnerability")
-
+st.markdown("""Analysis by Jeff Barlow-Spady""")    # Markdown text
+st.divider()
 # Sidebar text
-st.sidebar.markdown(
+st.markdown(
 """
-This application is a working prototype of the Neighborhood Social Vulnerability Map and 
+**This application is a working prototype of the Neighborhood Social Vulnerability Map and 
 Scoring System. There are currently issues with the tooltips for the hexagon layer.
-Below you will find sliders to alter the map's appearance and filter by score.
-Detailed information about the project can be found near the top of the sidebar - click on 'methodology'.
+On the sidebar you will find sliders to alter the map's appearance and filter by score.
+Detailed information about the project can be found near the top of the sidebar - click on 'methodology'.**
 """)
-
+st.sidebar.divider()
 # Sidebar options
 st.sidebar.title("Options")
+
 
 # Slider to filter weighted scores
 score_range = st.sidebar.slider(
     "Filter Weighted Scores",
     int(data["weighted_score"].min()),
-    int(data["weighted_score"].max()),
+    math.ceil(data["weighted_score"].max()),  # Round up the maximum value
     (int(data["weighted_score"].min()), int(data["weighted_score"].max())),
 )
 
@@ -126,7 +132,7 @@ view_state = pdk.ViewState(
     pitch=10,
 )
 
-map_style = st.selectbox("Select your map style from the dropdown menu above", [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
+map_style = st.selectbox("Select your map style using this dropdown", [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
 
 map_view = pdk.Deck(
     map_style=map_style,
