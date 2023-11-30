@@ -7,10 +7,13 @@ import math
 import altair as alt
 
 # Set Streamlit page configuration
-st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability", page_icon="📊", menu_items={
+st.set_page_config(layout="wide", 
+                   page_title="Edmonton Neighbourhood Social Vulnerability", 
+                   page_icon=":earth_americas:", 
+                   menu_items={
     "Get Help":'mailto:jeff.barlow.spady@gmail.com', 
-    'report a bug':'mailto:jeff.barlow.spady@gmail.com'
-    })
+    'report a bug':'mailto:jeff.barlow.spady@gmail.com',
+})
 
 # Function to map score to color
 def get_color_for_score(score, min_score, max_score):
