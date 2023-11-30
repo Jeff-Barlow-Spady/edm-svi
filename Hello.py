@@ -70,15 +70,15 @@ Detailed information about the project can be found near the top of the sidebar 
 # Sidebar options
 st.sidebar.title("Options")
 
-st.sidebar.divider()
+
 # Slider to filter weighted scores
 score_range = st.sidebar.slider(
     "Filter Weighted Scores",
     int(data["weighted_score"].min()),
     math.ceil(data["weighted_score"].max()),  # Round up the maximum value
-    (int(data["weighted_score"].min()), int(data["weighted_score"].max())),
+    (int(data["weighted_score"].min()), math.ceil(data["weighted_score"].max())),
 )
-
+st.sidebar.divider()
 # Filter data based on selected score range
 filtered_data = data[
     (data["weighted_score"] >= score_range[0]) & (data["weighted_score"] <= score_range[1])
@@ -89,14 +89,16 @@ min_score, max_score = score_range
 # Apply the color mapping function to the filtered data
 filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score))
 
+st.sidebar.markdown("""Select the layer you would like to display.""")
 # Layer selection with checkboxes
 scatterplot_visible = st.sidebar.checkbox("Show Scatterplot Layer", True)
 hexagon_visible = st.sidebar.checkbox("Show Hexagon Layer", False)
-
+st.sidebar.divider()
+st.sidebar.markdown("""Adjust The Height and Elevation of Hex Layer.""")
 # Hexagon Layer Interactivity
 elevation_scale = st.sidebar.slider("Adjust Elevation Scale", 1, 100, 10)
 elevation_range_max = st.sidebar.slider("Adjust Height of hex-tiles", 100, 5000, 450)
-
+st.sidebar.divider()
 # Define Layers
 scatterplot_layer = pdk.Layer(
     "ScatterplotLayer",
