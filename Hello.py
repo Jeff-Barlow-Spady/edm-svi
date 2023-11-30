@@ -66,11 +66,11 @@ Scoring System. There are currently issues with the tooltips for the hexagon lay
 On the sidebar you will find sliders to alter the map's appearance and filter by score.
 Detailed information about the project can be found near the top of the sidebar - click on 'methodology'.**
 """)
-st.sidebar.divider()
+
 # Sidebar options
 st.sidebar.title("Options")
 
-
+st.sidebar.divider()
 # Slider to filter weighted scores
 score_range = st.sidebar.slider(
     "Filter Weighted Scores",
