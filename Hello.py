@@ -5,6 +5,7 @@ import pandas as pd
 import json
 import math
 import altair as alt
+import shapely.wkt
 
 # Set Streamlit page configuration
 st.set_page_config(layout="wide", 
@@ -33,6 +34,15 @@ def get_color_for_score(score, min_score, max_score):
     green = 255 - red
     blue = 0
     return [red, green, blue, 255]
+
+def parse_geom(geom_str):
+    # Parse the WKT string to a Shapely geometry
+    geom = shapely.wkt.loads(geom_str)
+
+    # Convert the Shapely geometry to GeoJSON
+    geom_geojson = shapely.geometry.mapping(geom)
+
+    return geom_geojson
 
 @st.cache_data
 def get_data():
@@ -75,12 +85,35 @@ geojson_data = get_json(geojson_file_path)
 data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max()))
 
 # Step 3: Merge Data with GeoJSON
+
+
+# Convert the multipolygon to polygon
+def convert_multipolygon_to_polygon(geom):
+    if geom['type'] == 'MultiPolygon':
+        polygons = []
+        for polygon in geom['coordinates']:
+            polygons.append(polygon[0])
+        return {
+            'type': 'Polygon',
+            'coordinates': polygons
+        }
+    else:
+        return geom
+
 # Iterate over each feature in the GeoJSON data and add the corresponding color from the data DataFrame
 for feature in geojson_data.get('features', []):
     neighborhood_name = feature.get('properties', {}).get('neighbourhood')
     if neighborhood_name:
         matching_row = data[data['neighbourhood'] == neighborhood_name].iloc[0]
         feature['properties']['color'] = matching_row['color']
+        if isinstance(matching_row['the_geom'], str):
+            # If the_geom is a string, try to parse it as WKT
+            geom = shapely.geometry.mapping(shapely.wkt.loads(matching_row['the_geom']))
+        else:
+            # If the_geom is not a string, assume it's already in a GeoJSON-like format
+            geom = matching_row['the_geom']
+        # Convert the_geom to a Polygon if it's a MultiPolygon
+        feature['properties']['the_geom'] = convert_multipolygon_to_polygon(geom)
 
 # Set up the Streamlit application
 st.title("Edmonton Neighbourhood Social Vulnerability")
@@ -89,10 +122,14 @@ st.divider()
 # Sidebar text
 st.markdown(
 """
-**This application is a working prototype of the Neighborhood Social Vulnerability Map and 
-Scoring System. There are currently issues with the tooltips for the hexagon layer.
+This application is a working prototype of the Neighborhood Social Vulnerability Map and 
+Scoring System. 
+
+There are currently issues with the tooltips for the hexagon layer,
+and the filled_polygon is a feature in progress and is not yet working.
+
 On the sidebar you will find sliders to alter the map's appearance and filter by score.
-A link to detailed information about the project can be found near the top of the sidebar - click on 'methodology'.**
+A link to detailed information about the project can be found near the top of the sidebar - click on 'methodology' to learn more
 """)
 
 # Sidebar options
@@ -116,27 +153,31 @@ min_score, max_score = score_range
 # Apply the color mapping function to the filtered data
 filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score))
 
-st.sidebar.markdown("""Select the layer you would like to display.""")
+st.sidebar.markdown("""Select the layer you would like to display""")
 # Layer selection with checkboxes
 scatterplot_visible = st.sidebar.checkbox("Show Scatterplot Layer", True)
 hexagon_visible = st.sidebar.checkbox("Show Hexagon Layer", False)
+filled_polygon_visible = st.sidebar.checkbox("Show Filled Polygon Layer", False)
 st.sidebar.divider()
 st.sidebar.markdown("""Adjust The Height and Elevation of Hex Layer.""")
 # Hexagon Layer Interactivity
 elevation_scale = st.sidebar.slider("Adjust Elevation Scale", 1, 100, 10)
 elevation_range_max = st.sidebar.slider("Adjust Height of hex-tiles", 100, 5000, 450)
 st.sidebar.divider()
-
+st.sidebar.markdown("""Change Point Size and Opacity""")
+opacity = st.sidebar.slider("Opacity", 0.0, 1.0, 0.8)
+radius = st.sidebar.slider("Point Size", 1, 500, 300)
 # Define Layers
 scatterplot_layer = pdk.Layer(
     "ScatterplotLayer",
     filtered_data,
     get_position=["longitude", "latitude"],
     get_color="color",
-    get_radius=st.sidebar.slider("Point Size", 1, 500, 300),
+    get_radius=radius,
     pickable=True,
-    opacity=st.sidebar.slider("Opacity", 0.0, 1.0, 0.8),
+    opacity=opacity,
     visible=scatterplot_visible,
+    auto_highlight=True,
 )
 
 hexagon_layer = pdk.Layer(
@@ -153,6 +194,37 @@ hexagon_layer = pdk.Layer(
     coverage=1,
     visible=hexagon_visible,
 )
+filtered_data_dict = filtered_data[['longitude', 'latitude', 'color']].to_dict(orient='records')
+chloropleth_layer = pdk.Layer(
+    "GeoJsonLayer",
+    geojson_data,
+    stroked=False,
+    filled=True,
+    extruded=False,
+    wireframe=True,
+    get_fill_color=[185,75,75],
+    get_line_color=[255, 255, 255],
+    get_elevation=elevation_range_max,
+    get_line_width=20,
+    elevation_scale=elevation_scale,
+    opacity=opacity,
+    visible=filled_polygon_visible,
+    pickable=True,
+    auto_highlight=True,
+    get_polygon='properties.the_geom',
+    get_position='properties.coordinates',
+)
+
+# Color the chloropleth layer based on the output of get_color_from_score() or quartiles column
+#filtered_data['color'] = filtered_data.apply(lambda row: get_color_from_score(row['weighted_score']), axis=1)
+# or
+# filtered_data['color'] = filtered_data['quartiles'].apply(lambda x: get_color_from_quartiles(x))
+
+# Convert the filtered data to GeoJSON format
+
+
+# Update the chloropleth layer with the new GeoJSON data
+chloropleth_layer.data = geojson_data
 
 # Map view setup
 view_state = pdk.ViewState(
@@ -169,7 +241,7 @@ map_style = st.selectbox("Select your map style using this dropdown", [None, 'ma
 map_view = pdk.Deck(
     map_style=map_style,
     initial_view_state=view_state,
-    layers=[scatterplot_layer, hexagon_layer],
+    layers=[scatterplot_layer, hexagon_layer,chloropleth_layer],
     tooltip={
         "html": "<b>Score:</b> {weighted_score}<br><b>Neighborhood:</b> {neighbourhood}",
         "style": {"backgroundColor": "steelblue", "color": "white"},
