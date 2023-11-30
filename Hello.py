@@ -93,7 +93,7 @@ A link to detailed information about the project can be found near the top of th
 """)
 
 # Sidebar options
-st.sidebar.title("Options")
+st.sidebar.title("Map Options and Filters")
 
 # Slider to filter weighted scores
 score_range = st.sidebar.slider(
@@ -155,8 +155,10 @@ hexagon_layer = pdk.Layer(
 view_state = pdk.ViewState(
     latitude=data["latitude"].mean(),
     longitude=data["longitude"].mean(),
-    zoom=9,
+    zoom=10,
     pitch=10,
+    bearing=0,
+
 )
 
 map_style = st.selectbox("Select your map style using this dropdown", [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
@@ -197,11 +199,16 @@ chart = alt.Chart(top_neighborhoods).mark_bar().encode(
     titleFontSize=14
 )
 
-st.altair_chart(chart)
+# Display the chart and dataframe with a divider in between
+col1, col2 = st.columns(2)
+with col1:
+    st.dataframe(top_neighborhoods, width=600, height=400)
+    
 
-# Display information about the filtered neighborhoods
-st.dataframe(top_neighborhoods, width=600, height=400,)
 
+
+with col2:
+    st.altair_chart(chart)
 st.markdown("**Neighbourhood Information**")
 st.write(
     f"Total number of neighborhoods: {len(data)}\n"
