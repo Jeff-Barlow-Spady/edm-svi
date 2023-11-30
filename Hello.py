@@ -131,7 +131,7 @@ and the filled_polygon is a feature in progress and is not yet working.
 On the sidebar you will find sliders to alter the map's appearance and filter by score.
 A link to detailed information about the project can be found near the top of the sidebar - click on 'methodology' to learn more
 """)
-
+st.divider()
 # Sidebar options
 st.sidebar.title("Map Options and Filters")
 
@@ -278,10 +278,6 @@ chart = alt.Chart(top_neighborhoods).mark_bar().encode(
 col1, col2 = st.columns(2)
 with col1:
     st.dataframe(top_neighborhoods, width=600, height=400)
-    
-
-
-
 with col2:
     st.altair_chart(chart)
 st.markdown("**Neighbourhood Information**")
@@ -297,7 +293,8 @@ def convert_df(df):
     return df.to_csv().encode('utf-8')
 
 scores_data = convert_df(data)
-
+st.sidebar.divider()
+st.markdown("**Download Data**")
 st.sidebar.download_button(
     label="Download score data as CSV",
     data=scores_data,
