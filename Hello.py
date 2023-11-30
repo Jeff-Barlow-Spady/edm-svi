@@ -38,13 +38,34 @@ def get_data():
     Returns:
         pandas.DataFrame: The loaded data.
     """
-    return pd.read_csv('data/neighbourhood_scores_subset.csv')
+    try:
+        return pd.read_csv('data/neighbourhood_scores_subset.csv')
+    except FileNotFoundError:
+        st.error("Data file not found.")
+        return pd.DataFrame()
 
 # Load data and GeoJSON file
 data = get_data()
+def get_json(file_path):
+    """
+    Retrieves the GeoJSON data from a file.
+
+    Args:
+        file_path (str): The path to the GeoJSON file.
+
+    Returns:
+        dict: The loaded GeoJSON data.
+    """
+    try:
+        with open(file_path) as f:
+            geojson_data = json.load(f)
+        return geojson_data
+    except FileNotFoundError:
+        st.error("GeoJSON file not found.")
+        return {}
+    
 geojson_file_path = 'data/new_geom.geojson'
-with open(geojson_file_path) as f:
-    geojson_data = json.load(f)
+geojson_data = get_json(geojson_file_path)
 
 # Step 2: Color Mapping
 # Apply the color mapping function to the 'weighted_score' column and create a new 'color' column
@@ -52,10 +73,11 @@ data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, da
 
 # Step 3: Merge Data with GeoJSON
 # Iterate over each feature in the GeoJSON data and add the corresponding color from the data DataFrame
-for feature in geojson_data['features']:
-    neighborhood_name = feature['properties']['neighbourhood']
-    matching_row = data[data['neighbourhood'] == neighborhood_name].iloc[0]
-    feature['properties']['color'] = matching_row['color']
+for feature in geojson_data.get('features', []):
+    neighborhood_name = feature.get('properties', {}).get('neighbourhood')
+    if neighborhood_name:
+        matching_row = data[data['neighbourhood'] == neighborhood_name].iloc[0]
+        feature['properties']['color'] = matching_row['color']
 
 # Set up the Streamlit application
 st.title("Edmonton Neighbourhood Social Vulnerability")
@@ -72,7 +94,6 @@ A link to detailed information about the project can be found near the top of th
 
 # Sidebar options
 st.sidebar.title("Options")
-
 
 # Slider to filter weighted scores
 score_range = st.sidebar.slider(
@@ -102,6 +123,7 @@ st.sidebar.markdown("""Adjust The Height and Elevation of Hex Layer.""")
 elevation_scale = st.sidebar.slider("Adjust Elevation Scale", 1, 100, 10)
 elevation_range_max = st.sidebar.slider("Adjust Height of hex-tiles", 100, 5000, 450)
 st.sidebar.divider()
+
 # Define Layers
 scatterplot_layer = pdk.Layer(
     "ScatterplotLayer",
@@ -163,7 +185,7 @@ chart = alt.Chart(top_neighborhoods).mark_bar().encode(
     y=alt.Y("neighbourhood", axis=alt.Axis(labelAngle=0), sort=alt.EncodingSortField(field="weighted_score", order="descending")),
     x="weighted_score",
     tooltip=["neighbourhood", "weighted_score"],
-    color=alt.Color("weighted_score", scale=alt.Scale(scheme='purplered'))
+    color=alt.Color("weighted_score", scale=alt.Scale(scheme='goldred'))
 ).properties(
     title="Top 15 Neighborhoods by Weighted Score",
     width=600,
@@ -186,4 +208,24 @@ st.write(
     f"Average weighted score: {data['weighted_score'].mean():.2f}\n"
     f"Minimum weighted score: {data['weighted_score'].min():.2f}\n"
     f"Maximum weighted score: {data['weighted_score'].max():.2f}\n"
+)
+@st.cache_data
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf-8')
+
+scores_data = convert_df(data)
+
+st.sidebar.download_button(
+    label="Download score data as CSV",
+    data=scores_data,
+    file_name='edmonton_vulnerability_scores.csv',
+    mime='text/csv',
+)
+top_15 = convert_df(top_neighborhoods)
+st.sidebar.download_button(
+    label='Download Top 15 Data as CSV',
+    data=top_15,
+    file_name='top_15_neighbourhoods.csv',
+    mime='text/csv',
 )
