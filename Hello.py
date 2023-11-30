@@ -15,10 +15,12 @@ st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vuln
 def get_color_for_score(score, min_score, max_score):
     """
     Maps a score to a color based on a given range of scores.
+
     Args:
         score (float): The score to map to a color.
         min_score (float): The minimum score in the range.
         max_score (float): The maximum score in the range.
+
     Returns:
         list: A list of RGBA values representing the color.
     """
@@ -64,7 +66,7 @@ st.markdown(
 **This application is a working prototype of the Neighborhood Social Vulnerability Map and 
 Scoring System. There are currently issues with the tooltips for the hexagon layer.
 On the sidebar you will find sliders to alter the map's appearance and filter by score.
-Detailed information about the project can be found near the top of the sidebar - click on 'methodology'.**
+A link to detailed information about the project can be found near the top of the sidebar - click on 'methodology'.**
 """)
 
 # Sidebar options
