@@ -3,8 +3,7 @@ import streamlit as st
 st.set_page_config(
     layout="wide", 
     page_title="Neighborhood Scoring System: Statistical Analysis and Model Development Report",
-    page_icon="📊",
-    theme="auto"  # Set theme to "auto" to use system setting for light or dark mode
+    page_icon="📊",  # Set theme to "auto" to use system setting for light or dark mode
 )
 # Title
 st.title("Neighborhood Scoring System: Statistical Analysis and Model Development Report")
