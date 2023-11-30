@@ -4,6 +4,7 @@ import pydeck as pdk
 import pandas as pd
 import json
 import math
+import altair as alt
 
 # Set Streamlit page configuration
 st.set_page_config(layout="wide", page_title="Edmonton Neighbourhood Social Vulnerability", page_icon="📊", menu_items={
@@ -151,9 +152,38 @@ map_view = pdk.Deck(
 
 # Render the map
 st.pydeck_chart(map_view)
-
+st.divider()
 # Display information about the neighborhoods
+#Plot Chart with the top 15 neighborhoods by weighted score
+
+top_neighborhoods = filtered_data[["neighbourhood", "weighted_score"]].sort_values(by="weighted_score", ascending=False).head(15).reset_index(drop=True)
+top_neighborhoods["weighted_score"] = top_neighborhoods["weighted_score"].round(2)
+
+chart = alt.Chart(top_neighborhoods).mark_bar().encode(
+    y=alt.Y("neighbourhood", axis=alt.Axis(labelAngle=0), sort=alt.EncodingSortField(field="weighted_score", order="descending")),
+    x="weighted_score",
+    tooltip=["neighbourhood", "weighted_score"],
+    color=alt.Color("weighted_score", scale=alt.Scale(scheme='purplered'))
+).properties(
+    title="Top 15 Neighborhoods by Weighted Score",
+    width=600,
+    height=400
+).configure_mark(
+    color='steelblue'
+).configure_axis(
+    labelFontSize=12,
+    titleFontSize=14
+)
+
+st.altair_chart(chart)
+
+# Display information about the filtered neighborhoods
+st.dataframe(top_neighborhoods, width=600, height=400,)
+
 st.markdown("**Neighbourhood Information**")
 st.write(
-    f"Displaying data for {len(filtered_data)} neighborhoods using Weighted Scores between {score_range[0]} and {score_range[1]}."
+    f"Total number of neighborhoods: {len(data)}\n"
+    f"Average weighted score: {data['weighted_score'].mean():.2f}\n"
+    f"Minimum weighted score: {data['weighted_score'].min():.2f}\n"
+    f"Maximum weighted score: {data['weighted_score'].max():.2f}\n"
 )
