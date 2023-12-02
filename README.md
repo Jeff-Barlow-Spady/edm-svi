@@ -1,7 +1,5 @@
-# Welcome to streamlit
+# Edmonton Neighbourhood Social Vulnerability Index
 
-This is the app you get when you run `streamlit hello`, extracted as its own app.
+This application is a working prototype of the Neighborhood Social Vulnerability Map and Scoring System.
 
-Edit [Hello.py](./Hello.py) to customize this app to your heart's desire. ❤️
-
-Check it out on [Streamlit Community Cloud](https://st-hello-app.streamlit.app/)
+This is a composite of 35 indicators of Vulnerability and is an exercise in understanding the factors that contribute to Neighbourhoods experiencing vulnerability.
