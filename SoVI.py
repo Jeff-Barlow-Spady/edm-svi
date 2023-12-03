@@ -87,10 +87,12 @@ st.divider()
 st.markdown(
 """
 This application is a working prototype of the Neighborhood Social Vulnerability Map and 
-Scoring System. 
+Scoring System. A higher score indicates more risk of vulnerability
+wiithin a neighbourhood. Weighted score ranges from 5 to 16.
 
+Important Notes:
 There are currently issues with the tooltips for the hexagon layer,
-and the filled_polygon is a feature in progress and is not yet working.
+and the filled_polygon is a feature in progress and is not yet working. 
 
 On the sidebar you will find sliders to alter the map's appearance and filter by score.
 A link to detailed information about the project can be found near the top of the sidebar - click on 'methodology' to learn more
@@ -230,7 +232,6 @@ def convert_df(df):
 
 scores_data = convert_df(data)
 st.sidebar.divider()
-st.markdown("**Download Data**")
 st.sidebar.download_button(
     label="Download score data as CSV",
     data=scores_data,
