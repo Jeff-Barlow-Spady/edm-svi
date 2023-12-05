@@ -176,6 +176,7 @@ min_score, max_score = score_range
 
 # Apply the color mapping function to the filtered data
 filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score, mode=color_mapping_mode, cmap=selected_cmap))
+map_style = st.sidebar.selectbox("Select your map style using this dropdown", [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
 
 st.sidebar.divider()
 st.sidebar.markdown("""Select the layer you would like to display""")
@@ -296,7 +297,6 @@ view_state = pdk.ViewState(
     bearing=0,
 )
 
-map_style = st.selectbox("Select your map style using this dropdown", [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
 
 map_view = pdk.Deck(
     map_style=map_style,
