@@ -26,23 +26,8 @@ color_mapping_mode = st.sidebar.radio(
     "Select Color Mapping Mode",
     ("Standard", "Emphasized High Scores")
 )
-cmap_options = {
-    "viridis": "Perceptually uniform and colorblind-friendly",
-    "plasma": "Perceptually uniform with a different color range",
-    "cividis": "Designed for those with color vision deficiency",
-    "inferno": "Perceptually uniform, bright in the middle and dark at both ends",
-    "magma": "Perceptually uniform, bright at the high end and dark at the low end",
-    "coolwarm": "Two contrasting colors with a neutral color in the middle",
-    "rainbow": "Spectrum of colors from red to violet",
-    "jet": "A high-contrast, four-color map (not recommended for colorblind users)"
-}
 
-selected_cmap = st.sidebar.selectbox(
-    "Select a color map",
-    options=list(cmap_options.keys()),
-    format_func=lambda x: f"{x} - {cmap_options[x]}"
-)
-def get_color_for_score(score, min_score, max_score, mode='Standard', cmap=selected_cmap):
+def get_color_for_score(score, min_score, max_score, mode='Standard'):
     """
     Maps a score to a color. 
     Mode can be 'Standard' or 'Emphasized High Scores'.
@@ -52,7 +37,6 @@ def get_color_for_score(score, min_score, max_score, mode='Standard', cmap=selec
         min_score (float): The minimum score in the range.
         max_score (float): The maximum score in the range.
         mode (str): The color mapping mode ('Standard' or 'Emphasized High Scores').
-        cmap (str): The name of the color map to use.
 
     Returns:
         list: A list of RGBA values representing the color.
@@ -63,10 +47,10 @@ def get_color_for_score(score, min_score, max_score, mode='Standard', cmap=selec
     if mode == 'Emphasized High Scores':
         # Apply a nonlinear transformation to emphasize higher scores
         emphasized_score = np.power(normalized_score, 1)
-        color = cm.get_cmap(cmap)(emphasized_score)
+        color = cm.get_cmap('cividis')(emphasized_score)
     else:
         # Standard linear mapping
-        color = cm.get_cmap(cmap)(normalized_score)
+        color = cm.get_cmap('cividis')(normalized_score)
 
     # Convert color from 0-1 RGB format to 0-255 RGB format, keeping alpha as 255
     return [int(channel * 255) for channel in color[:3]] + [255]
@@ -96,7 +80,7 @@ def get_data():
             return pd.DataFrame()
 
         # Apply color mapping
-        data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max(), mode=color_mapping_mode,cmap=selected_cmap))
+        data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max(), mode=color_mapping_mode))
         
         return data
     except FileNotFoundError:
@@ -175,9 +159,8 @@ filtered_data = data[
 min_score, max_score = score_range
 
 # Apply the color mapping function to the filtered data
-filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score, mode=color_mapping_mode, cmap=selected_cmap))
+filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score))
 
-st.sidebar.divider()
 st.sidebar.markdown("""Select the layer you would like to display""")
 # Layer selection with checkboxes
 scatterplot_visible = st.sidebar.checkbox("Show Scatterplot Layer", True)

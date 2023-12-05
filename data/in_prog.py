@@ -21,20 +21,21 @@ def convert_multipolygon_to_polygon(geom):
     else:
         return geom
 
-# Iterate over each feature in the GeoJSON data and add the corresponding color from the data DataFrame
+# Iterate over each feature in the GeoJSON data
+geojson_data = {}  # Define the geojson_data variable
+
 for feature in geojson_data.get('features', []):
     neighborhood_name = feature.get('properties', {}).get('neighbourhood')
     if neighborhood_name:
-        matching_row = data[data['neighbourhood'] == neighborhood_name].iloc[0]
-        feature['properties']['color'] = matching_row['color']
-        if isinstance(matching_row['the_geom'], str):
-            # If the_geom is a string, try to parse it as WKT
-            geom = shapely.geometry.mapping(shapely.wkt.loads(matching_row['the_geom']))
-        else:
-            # If the_geom is not a string, assume it's already in a GeoJSON-like format
-            geom = matching_row['the_geom']
-        # Convert the_geom to a Polygon if it's a MultiPolygon
-        feature['properties']['the_geom'] = convert_multipolygon_to_polygon(geom)
+        matching_rows = data[data['neighbourhood'] == neighborhood_name]
+        if not matching_rows.empty:
+            matching_row = matching_rows.iloc[0]
+            feature['properties']['color'] = matching_row['color']
+            if isinstance(matching_row['the_geom'], str):
+                geom = parse_geom(matching_row['the_geom'])
+            else:
+                geom = matching_row['the_geom']
+            feature['properties']['the_geom'] = convert_multipolygon_to_polygon(geom)
 
 
 
@@ -49,10 +50,7 @@ chloropleth_layer = pdk.Layer(
     wireframe=True,
     get_fill_color=[185,75,75],
     get_line_color=[255, 255, 255],
-    get_elevation=elevation_range_max,
     get_line_width=20,
-    elevation_scale=elevation_scale,
-    opacity=opacity,
     visible=filled_polygon_visible,
     pickable=True,
     auto_highlight=True,
