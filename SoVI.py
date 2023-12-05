@@ -19,15 +19,32 @@ st.set_page_config(layout="wide",
     'report a bug':'mailto:jeff.barlow.spady@gmail.com',
 })
 
-import matplotlib.cm as cm
-
+import matplotlib as plt
+st.sidebar.title("Map Options and Filters")
+st.sidebar.divider()
 # Radio button for selecting color mapping mode
 color_mapping_mode = st.sidebar.radio(
     "Select Color Mapping Mode",
     ("Standard", "Emphasized High Scores")
 )
+cmap_options = {
+    "cividis": "Designed for those with color vision deficiency",
+    "viridis": "Perceptually uniform and colorblind-friendly",
+    "plasma": "Perceptually uniform with a different color range",
+    "inferno": "Perceptually uniform, bright in the middle and dark at both ends",
+    "magma": "Perceptually uniform, bright at the high end and dark at the low end",
+    "coolwarm": "Two contrasting colors with a neutral color in the middle",
+    "rainbow": "Spectrum of colors from red to violet",
+    "jet": "A high-contrast, four-color map (not recommended for colorblind users)"
+}
 
-def get_color_for_score(score, min_score, max_score, mode='Standard'):
+selected_cmap = st.sidebar.selectbox(
+    "Select a color map",
+    options=list(cmap_options.keys()),
+    format_func=lambda x: f"{x} - {cmap_options[x]}"
+)
+st.sidebar.divider()
+def get_color_for_score(score, min_score, max_score, mode='Standard', cmap=selected_cmap):
     """
     Maps a score to a color. 
     Mode can be 'Standard' or 'Emphasized High Scores'.
@@ -37,6 +54,7 @@ def get_color_for_score(score, min_score, max_score, mode='Standard'):
         min_score (float): The minimum score in the range.
         max_score (float): The maximum score in the range.
         mode (str): The color mapping mode ('Standard' or 'Emphasized High Scores').
+        cmap (str): The name of the color map to use.
 
     Returns:
         list: A list of RGBA values representing the color.
@@ -46,11 +64,11 @@ def get_color_for_score(score, min_score, max_score, mode='Standard'):
 
     if mode == 'Emphasized High Scores':
         # Apply a nonlinear transformation to emphasize higher scores
-        emphasized_score = np.power(normalized_score, 1)
-        color = cm.get_cmap('cividis')(emphasized_score)
+        emphasized_score = np.power(normalized_score, 1.2)
+        color = plt.colormaps.get_cmap(cmap)(emphasized_score)
     else:
         # Standard linear mapping
-        color = cm.get_cmap('cividis')(normalized_score)
+        color = plt.colormaps.get_cmap(cmap)(normalized_score)
 
     # Convert color from 0-1 RGB format to 0-255 RGB format, keeping alpha as 255
     return [int(channel * 255) for channel in color[:3]] + [255]
@@ -78,9 +96,6 @@ def get_data():
         except Exception as e:
             st.error(f"Error converting WKT to GeoJSON: {e}")
             return pd.DataFrame()
-
-        # Apply color mapping
-        data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max(), mode=color_mapping_mode))
         
         return data
     except FileNotFoundError:
@@ -88,7 +103,8 @@ def get_data():
         return pd.DataFrame()
 
 data = get_data()
-
+# Apply color mapping
+data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max(), mode=color_mapping_mode, cmap=selected_cmap))
 # Ensure that the 'geojson' column exists before proceeding
 if 'geojson' in data.columns:
     # Creating a GeoJSON Feature Collection from the processed data
@@ -107,18 +123,11 @@ if 'geojson' in data.columns:
 
     geojson_data = {'type': 'FeatureCollection', 'features': geojson_features}
 
-    # ... [rest of the streamlit app setup and pydeck configuration] ...
 else:
     st.error("GeoJSON data could not be created.")
-# Step 2: Color Mapping
-# Apply the color mapping function to the 'weighted_score' column and create a new 'color' column
-#data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max()))
-
-# Step 3: Merge Data with GeoJSON
-
 
 # Set up the Streamlit application
-st.title("Edmonton Neighbourhood Social Vulnerability")
+st.title("Social Vulnerability in Edmonton Neighbourhoods: Creating an Index")
 st.markdown("""Analysis by Jeff Barlow-Spady""")    # Markdown text
 st.divider()
 # Sidebar text
@@ -126,22 +135,26 @@ st.markdown(
 """
 This application is a working prototype of the Neighborhood Social Vulnerability Map and 
 Scoring System. A higher score indicates more risk of vulnerability
-wiithin a neighbourhood. Weighted score ranges from 5 to 16. Weighted score is calculated by aggregating the
-scores of the factor loadings and feature importance scores from the Random Forest and XGBoost models.
+wiithin a neighbourhood. Weighted score ranges from 5 to 16. 
+The weighted score is calculated by aggregating the scores of the factor loadings 
+and feature importance scores from the Random Forest and XGBoost models.
 
-Important Notes:
-Tooltips for the hexagon and filled polygon layers are not working. This is a known issue with pydeck.
-My current workaround is using the scatterplot layer as an overlay to display the tooltip, so it may feel a bit clunky for now.
+**Important Notes**:
+
+Tooltips for the GeoJSON and filled polygon layers are not working as I would like. 
+This is a known issue with pydeck.
+My current workaround is using the scatterplot layer as an overlay to display the tooltip on the filled polygon layer,
+so it may feel a bit clunky for now.
 
 
-On the sidebar you will find sliders to alter the map's appearance and filter by score.
+:point_left: On the sidebar you will find sliders to alter the map's appearance and filter by score.
 A link to detailed information about the project can be found near the top of the sidebar - click on 'methodology' to learn more
 
 You will also find a link to download the data used to create the map and the top 15 neighborhoods by weighted score.
 """)
 st.divider()
 # Sidebar options
-st.sidebar.title("Map Options and Filters")
+
 
 # Slider to filter weighted scores
 score_range = st.sidebar.slider(
@@ -156,15 +169,20 @@ filtered_data = data[
     (data["weighted_score"] >= score_range[0]) & (data["weighted_score"] <= score_range[1])
 ].copy()  # Create a copy of the filtered data
 
+# Round the weighted_score column to two decimal places
+filtered_data["weighted_score"] = filtered_data["weighted_score"].round(2)
+
 min_score, max_score = score_range
 
 # Apply the color mapping function to the filtered data
-filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score))
+filtered_data['color'] = filtered_data["weighted_score"].apply(lambda x: get_color_for_score(x, min_score, max_score, mode=color_mapping_mode, cmap=selected_cmap))
+map_style = st.sidebar.selectbox("Select your map style using this dropdown", [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
 
+st.sidebar.divider()
 st.sidebar.markdown("""Select the layer you would like to display""")
 # Layer selection with checkboxes
 scatterplot_visible = st.sidebar.checkbox("Show Scatterplot Layer", True)
-hexagon_visible = st.sidebar.checkbox("Show Hexagon Layer", False)
+geojson_visible = st.sidebar.checkbox("Show GeoJSON Layer", False)
 filled_polygon_visible = st.sidebar.checkbox("Show Filled Polygon Layer", True)
 st.sidebar.divider()
 st.sidebar.markdown("""Adjust The Height and Elevation of Hex Layer.""")
@@ -173,12 +191,12 @@ elevation_scale = st.sidebar.slider("Adjust Elevation Scale", 1, 100, 10)
 elevation_range_max = st.sidebar.slider("Adjust Height of hex-tiles", 100, 5000, 450)
 st.sidebar.divider()
 st.sidebar.markdown("""Change Point Size and Opacity""")
-opacity = st.sidebar.slider("Opacity", 0.0, 1.0, 0.3)
-radius = st.sidebar.slider("Point Size", 1, 500, 415)
+opacity = st.sidebar.slider("Opacity", 0.0, 1.0, 0.1)
+radius = st.sidebar.slider("Point Size", 1, 500, 463)
 
 # Function to get the appropriate tooltip based on the visible layer
 def get_tooltip_for_visible_layer():
-    if scatterplot_visible and not hexagon_visible and not filled_polygon_visible:
+    if scatterplot_visible and not geojson_visible and not filled_polygon_visible:
         return {
             "html": "<b>Neighbourhood:</b> {neighbourhood}<br><b>Score:</b> {weighted_score}",
             "style": {
@@ -192,10 +210,9 @@ def get_tooltip_for_visible_layer():
             "boxShadow": "3px 3px 5px rgba(0, 0, 0, 0.3)",
             }
         }
-    elif hexagon_visible:
+    elif geojson_visible:
         return {
-            "html": "<b>Count:</b> {points}",
-            "style": {
+            "html": "<b>Neighbourhood:</b> {neighbourhood}<br><b>Score:</b> {'no luck yet. can apparently only have one tooltip at a time'}",            "style": {
             "backgroundColor": "steelblue",
             "color": "white",
             "fontSize": "14px",
@@ -227,22 +244,23 @@ tooltip_text = get_tooltip_for_visible_layer()
 
 # Define Layers
 
-
-hexagon_layer = pdk.Layer(
-    "HexagonLayer",
-    filtered_data,
-    auto_highlight=True,
-    get_position=["longitude", "latitude"],
-    elevation_scale=elevation_scale,
-    pickable=True,
-    stroked=True,
+geojson_layer = pdk.Layer(
+    "GeoJsonLayer",
+    geojson_data,
+    opacity=1.0,
+    stroked=False,
     filled=True,
-    elevation_range=[0, elevation_range_max],
     extruded=True,
-    coverage=1,
-    visible=hexagon_visible,
-    get_tooltip=lambda layer: f"Count: {layer.context['count']}",
+    wireframe=True,
+    elevation_scale=elevation_scale,
+    get_elevation="properties.weighted_score * 20",
+    get_fill_color="properties.color",
+    get_line_color=[10, 10, 10],
+    pickable=True,
+    auto_highlight=True,
+    visible=geojson_visible,
 )
+
 chloropleth_layer = pdk.Layer(
     "GeoJsonLayer",
     geojson_data,
@@ -251,7 +269,7 @@ chloropleth_layer = pdk.Layer(
     extruded=False,
     wireframe=True,
     get_fill_color='properties.color',
-    get_line_color=[0, 0, 0],
+    get_line_color=[10, 10, 10],
     get_line_width=30,
     visible=filled_polygon_visible,
     pickable=True,
@@ -274,17 +292,19 @@ scatterplot_layer = pdk.Layer(
 view_state = pdk.ViewState(
     latitude=data["latitude"].mean(),
     longitude=data["longitude"].mean(),
-    zoom=10,
+    zoom=9,
     pitch=10,
     bearing=0,
 )
 
-map_style = st.selectbox("Select your map style using this dropdown", [None, 'mapbox://styles/mapbox/light-v9', 'mapbox://styles/mapbox/dark-v9', 'mapbox://styles/mapbox/satellite-v9'])
 
 map_view = pdk.Deck(
     map_style=map_style,
     initial_view_state=view_state,
-    layers=[hexagon_layer, chloropleth_layer, scatterplot_layer],
+    layers=[geojson_layer, chloropleth_layer, scatterplot_layer],
+    height=800,
+    width="80%",
+    description="Social Vulnerability in Edmonton Neighbourhoods",
     tooltip={
             "html": "<b>Neighbourhood:</b> {neighbourhood}<br><b>Score:</b> {weighted_score}",
             "style": {
@@ -325,7 +345,7 @@ chart = alt.Chart(top_neighborhoods).mark_bar().encode(
 ).properties(
     title="Top 15 Neighborhoods by Weighted Score",
     width=600,
-    height=400
+    height=600
 ).configure_mark(
     color='steelblue'
 ).configure_axis(
@@ -335,11 +355,11 @@ chart = alt.Chart(top_neighborhoods).mark_bar().encode(
 
 st.divider()
 # Display the chart and dataframe with a divider in between
-col1, col2 = st.columns(2)
+col1, col2 = st.columns(2,)
 with col1:
-    st.dataframe(top_neighborhoods, width=600, height=400)
+    st.dataframe(top_neighborhoods, width=600, height=600)
 with col2:
-    st.altair_chart(chart)
+    st.altair_chart(chart,use_container_width=True)
 
 @st.cache_data
 def convert_df(df):
@@ -361,7 +381,3 @@ st.sidebar.download_button(
     file_name='top_15_neighbourhoods.csv',
     mime='text/csv',
 )
-
-st.write(geojson_data['features'][0]['properties']['neighbourhood'])
-st.write(tooltip_text)
-st.write(geojson_data['features'])
