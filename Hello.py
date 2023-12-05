@@ -20,7 +20,7 @@ st.set_page_config(layout="wide",
 })
 
 import matplotlib.cm as cm
-
+st.sidebar.title("Map Options and Filters")
 # Radio button for selecting color mapping mode
 color_mapping_mode = st.sidebar.radio(
     "Select Color Mapping Mode",
@@ -157,7 +157,7 @@ You will also find a link to download the data used to create the map and the to
 """)
 st.divider()
 # Sidebar options
-st.sidebar.title("Map Options and Filters")
+
 
 # Slider to filter weighted scores
 score_range = st.sidebar.slider(
