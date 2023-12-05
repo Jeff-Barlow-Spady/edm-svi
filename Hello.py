@@ -28,9 +28,9 @@ color_mapping_mode = st.sidebar.radio(
     ("Standard", "Emphasized High Scores")
 )
 cmap_options = {
+    "cividis": "Designed for those with color vision deficiency",
     "viridis": "Perceptually uniform and colorblind-friendly",
     "plasma": "Perceptually uniform with a different color range",
-    "cividis": "Designed for those with color vision deficiency",
     "inferno": "Perceptually uniform, bright in the middle and dark at both ends",
     "magma": "Perceptually uniform, bright at the high end and dark at the low end",
     "coolwarm": "Two contrasting colors with a neutral color in the middle",
@@ -64,7 +64,7 @@ def get_color_for_score(score, min_score, max_score, mode='Standard', cmap=selec
 
     if mode == 'Emphasized High Scores':
         # Apply a nonlinear transformation to emphasize higher scores
-        emphasized_score = np.power(normalized_score, 1)
+        emphasized_score = np.power(normalized_score, 1.2)
         color = cm.get_cmap(cmap)(emphasized_score)
     else:
         # Standard linear mapping
