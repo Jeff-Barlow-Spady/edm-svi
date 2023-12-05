@@ -292,7 +292,7 @@ scatterplot_layer = pdk.Layer(
 view_state = pdk.ViewState(
     latitude=data["latitude"].mean(),
     longitude=data["longitude"].mean(),
-    zoom=10,
+    zoom=9,
     pitch=10,
     bearing=0,
 )
