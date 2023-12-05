@@ -12,7 +12,7 @@ import numpy as np
 
 # Set Streamlit page configuration
 st.set_page_config(layout="wide", 
-                   page_title="Edmonton Neighbourhood Social Vulnerability", 
+                   page_title="Edmonton Neighbourhood Social Vulnerability",
                    page_icon=":earth_americas:", 
                    menu_items={
     "Get Help":'mailto:jeff.barlow.spady@gmail.com', 
