@@ -21,6 +21,7 @@ st.set_page_config(layout="wide",
 
 import matplotlib.cm as cm
 st.sidebar.title("Map Options and Filters")
+st.sidebar.divider()
 # Radio button for selecting color mapping mode
 color_mapping_mode = st.sidebar.radio(
     "Select Color Mapping Mode",
@@ -42,6 +43,7 @@ selected_cmap = st.sidebar.selectbox(
     options=list(cmap_options.keys()),
     format_func=lambda x: f"{x} - {cmap_options[x]}"
 )
+st.sidebar.divider()
 def get_color_for_score(score, min_score, max_score, mode='Standard', cmap=selected_cmap):
     """
     Maps a score to a color. 
@@ -146,7 +148,7 @@ wiithin a neighbourhood. Weighted score ranges from 5 to 16. Weighted score is c
 scores of the factor loadings and feature importance scores from the Random Forest and XGBoost models.
 
 Important Notes:
-Tooltips for the hexagon and filled polygon layers are not working. This is a known issue with pydeck.
+Tooltips for the hexagon and filled polygon layers are not working as I would like. This is a known issue with pydeck.
 My current workaround is using the scatterplot layer as an overlay to display the tooltip, so it may feel a bit clunky for now.
 
 
