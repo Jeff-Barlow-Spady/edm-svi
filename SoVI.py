@@ -303,7 +303,7 @@ map_view = pdk.Deck(
     initial_view_state=view_state,
     layers=[geojson_layer, chloropleth_layer, scatterplot_layer],
     height=1100,
-    width='60%'
+    width='60%',
     description="Social Vulnerability in Edmonton Neighbourhoods",
     tooltip={
             "html": "<b>Neighbourhood:</b> {neighbourhood}<br><b>Score:</b> {weighted_score}",
