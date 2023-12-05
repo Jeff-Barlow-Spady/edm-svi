@@ -19,7 +19,7 @@ st.set_page_config(layout="wide",
     'report a bug':'mailto:jeff.barlow.spady@gmail.com',
 })
 
-import matplotlib.cm as cm
+import matplotlib as plt
 st.sidebar.title("Map Options and Filters")
 st.sidebar.divider()
 # Radio button for selecting color mapping mode
@@ -65,10 +65,10 @@ def get_color_for_score(score, min_score, max_score, mode='Standard', cmap=selec
     if mode == 'Emphasized High Scores':
         # Apply a nonlinear transformation to emphasize higher scores
         emphasized_score = np.power(normalized_score, 1.2)
-        color = cm.get_cmap(cmap)(emphasized_score)
+        color = plt.colormaps.get_cmap(cmap)(emphasized_score)
     else:
         # Standard linear mapping
-        color = cm.get_cmap(cmap)(normalized_score)
+        color = plt.colormaps.get_cmap(cmap)(normalized_score)
 
     # Convert color from 0-1 RGB format to 0-255 RGB format, keeping alpha as 255
     return [int(channel * 255) for channel in color[:3]] + [255]
@@ -96,9 +96,6 @@ def get_data():
         except Exception as e:
             st.error(f"Error converting WKT to GeoJSON: {e}")
             return pd.DataFrame()
-
-        # Apply color mapping
-        data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max(), mode=color_mapping_mode,cmap=selected_cmap))
         
         return data
     except FileNotFoundError:
@@ -106,7 +103,8 @@ def get_data():
         return pd.DataFrame()
 
 data = get_data()
-
+# Apply color mapping
+data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max(), mode=color_mapping_mode, cmap=selected_cmap))
 # Ensure that the 'geojson' column exists before proceeding
 if 'geojson' in data.columns:
     # Creating a GeoJSON Feature Collection from the processed data
@@ -125,18 +123,11 @@ if 'geojson' in data.columns:
 
     geojson_data = {'type': 'FeatureCollection', 'features': geojson_features}
 
-    # ... [rest of the streamlit app setup and pydeck configuration] ...
 else:
     st.error("GeoJSON data could not be created.")
-# Step 2: Color Mapping
-# Apply the color mapping function to the 'weighted_score' column and create a new 'color' column
-#data['color'] = data['weighted_score'].apply(lambda x: get_color_for_score(x, data['weighted_score'].min(), data['weighted_score'].max()))
-
-# Step 3: Merge Data with GeoJSON
-
 
 # Set up the Streamlit application
-st.title("Edmonton Neighbourhood Social Vulnerability")
+st.title("Social Vulnerability in Edmonton Neighbourhoods: Creating an Index")
 st.markdown("""Analysis by Jeff Barlow-Spady""")    # Markdown text
 st.divider()
 # Sidebar text
@@ -144,12 +135,15 @@ st.markdown(
 """
 This application is a working prototype of the Neighborhood Social Vulnerability Map and 
 Scoring System. A higher score indicates more risk of vulnerability
-wiithin a neighbourhood. Weighted score ranges from 5 to 16. Weighted score is calculated by aggregating the
-scores of the factor loadings and feature importance scores from the Random Forest and XGBoost models.
+wiithin a neighbourhood. Weighted score ranges from 5 to 16. 
+The weighted score is calculated by aggregating the scores of the factor loadings 
+and feature importance scores from the Random Forest and XGBoost models.
 
-Important Notes:
-Tooltips for the hexagon and filled polygon layers are not working as I would like. This is a known issue with pydeck.
-My current workaround is using the scatterplot layer as an overlay to display the tooltip, so it may feel a bit clunky for now.
+**Important Notes**:
+Tooltips for the hexagon and filled polygon layers are not working as I would like. 
+This is a known issue with pydeck.
+My current workaround is using the scatterplot layer as an overlay to display the tooltip,
+so it may feel a bit clunky for now.
 
 
 On the sidebar you will find sliders to alter the map's appearance and filter by score.
@@ -304,6 +298,9 @@ map_view = pdk.Deck(
     map_style=map_style,
     initial_view_state=view_state,
     layers=[hexagon_layer, chloropleth_layer, scatterplot_layer],
+    height=800,
+    width="80%",
+    description="Social Vulnerability in Edmonton Neighbourhoods",
     tooltip={
             "html": "<b>Neighbourhood:</b> {neighbourhood}<br><b>Score:</b> {weighted_score}",
             "style": {
@@ -380,4 +377,3 @@ st.sidebar.download_button(
     file_name='top_15_neighbourhoods.csv',
     mime='text/csv',
 )
-
