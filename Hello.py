@@ -193,8 +193,8 @@ elevation_scale = st.sidebar.slider("Adjust Elevation Scale", 1, 100, 10)
 elevation_range_max = st.sidebar.slider("Adjust Height of hex-tiles", 100, 5000, 450)
 st.sidebar.divider()
 st.sidebar.markdown("""Change Point Size and Opacity""")
-opacity = st.sidebar.slider("Opacity", 0.0, 1.0, 0.3)
-radius = st.sidebar.slider("Point Size", 1, 500, 415)
+opacity = st.sidebar.slider("Opacity", 0.0, 1.0, 0.1)
+radius = st.sidebar.slider("Point Size", 1, 500, 463)
 
 # Function to get the appropriate tooltip based on the visible layer
 def get_tooltip_for_visible_layer():
