@@ -379,6 +379,3 @@ st.sidebar.download_button(
     mime='text/csv',
 )
 
-st.write(geojson_data['features'][0]['properties']['neighbourhood'])
-st.write(tooltip_text)
-st.write(geojson_data['features'])
