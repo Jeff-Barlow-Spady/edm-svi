@@ -140,13 +140,14 @@ The weighted score is calculated by aggregating the scores of the factor loading
 and feature importance scores from the Random Forest and XGBoost models.
 
 **Important Notes**:
-Tooltips for the hexagon and filled polygon layers are not working as I would like. 
+
+Tooltips for the GeoJSON and filled polygon layers are not working as I would like. 
 This is a known issue with pydeck.
-My current workaround is using the scatterplot layer as an overlay to display the tooltip,
+My current workaround is using the scatterplot layer as an overlay to display the tooltip on the filled polygon layer,
 so it may feel a bit clunky for now.
 
 
-On the sidebar you will find sliders to alter the map's appearance and filter by score.
+:point_left: On the sidebar you will find sliders to alter the map's appearance and filter by score.
 A link to detailed information about the project can be found near the top of the sidebar - click on 'methodology' to learn more
 
 You will also find a link to download the data used to create the map and the top 15 neighborhoods by weighted score.
@@ -168,6 +169,9 @@ filtered_data = data[
     (data["weighted_score"] >= score_range[0]) & (data["weighted_score"] <= score_range[1])
 ].copy()  # Create a copy of the filtered data
 
+# Round the weighted_score column to two decimal places
+filtered_data["weighted_score"] = filtered_data["weighted_score"].round(2)
+
 min_score, max_score = score_range
 
 # Apply the color mapping function to the filtered data
@@ -178,7 +182,7 @@ st.sidebar.divider()
 st.sidebar.markdown("""Select the layer you would like to display""")
 # Layer selection with checkboxes
 scatterplot_visible = st.sidebar.checkbox("Show Scatterplot Layer", True)
-hexagon_visible = st.sidebar.checkbox("Show Hexagon Layer", False)
+geojson_visible = st.sidebar.checkbox("Show GeoJSON Layer", False)
 filled_polygon_visible = st.sidebar.checkbox("Show Filled Polygon Layer", True)
 st.sidebar.divider()
 st.sidebar.markdown("""Adjust The Height and Elevation of Hex Layer.""")
@@ -192,7 +196,7 @@ radius = st.sidebar.slider("Point Size", 1, 500, 463)
 
 # Function to get the appropriate tooltip based on the visible layer
 def get_tooltip_for_visible_layer():
-    if scatterplot_visible and not hexagon_visible and not filled_polygon_visible:
+    if scatterplot_visible and not geojson_visible and not filled_polygon_visible:
         return {
             "html": "<b>Neighbourhood:</b> {neighbourhood}<br><b>Score:</b> {weighted_score}",
             "style": {
@@ -206,10 +210,9 @@ def get_tooltip_for_visible_layer():
             "boxShadow": "3px 3px 5px rgba(0, 0, 0, 0.3)",
             }
         }
-    elif hexagon_visible:
+    elif geojson_visible:
         return {
-            "html": "<b>Count:</b> {points}",
-            "style": {
+            "html": "<b>Neighbourhood:</b> {neighbourhood}<br><b>Score:</b> {'no luck yet. can apparently only have one tooltip at a time'}",            "style": {
             "backgroundColor": "steelblue",
             "color": "white",
             "fontSize": "14px",
@@ -241,22 +244,23 @@ tooltip_text = get_tooltip_for_visible_layer()
 
 # Define Layers
 
-
-hexagon_layer = pdk.Layer(
-    "HexagonLayer",
-    filtered_data,
-    auto_highlight=True,
-    get_position=["longitude", "latitude"],
-    elevation_scale=elevation_scale,
-    pickable=True,
-    stroked=True,
+geojson_layer = pdk.Layer(
+    "GeoJsonLayer",
+    geojson_data,
+    opacity=1.0,
+    stroked=False,
     filled=True,
-    elevation_range=[0, elevation_range_max],
     extruded=True,
-    coverage=1,
-    visible=hexagon_visible,
-    get_tooltip=lambda layer: f"Count: {layer.context['count']}",
+    wireframe=True,
+    elevation_scale=elevation_scale,
+    get_elevation="properties.weighted_score * 20",
+    get_fill_color="properties.color",
+    get_line_color=[10, 10, 10],
+    pickable=True,
+    auto_highlight=True,
+    visible=geojson_visible,
 )
+
 chloropleth_layer = pdk.Layer(
     "GeoJsonLayer",
     geojson_data,
@@ -265,7 +269,7 @@ chloropleth_layer = pdk.Layer(
     extruded=False,
     wireframe=True,
     get_fill_color='properties.color',
-    get_line_color=[0, 0, 0],
+    get_line_color=[10, 10, 10],
     get_line_width=30,
     visible=filled_polygon_visible,
     pickable=True,
@@ -297,7 +301,7 @@ view_state = pdk.ViewState(
 map_view = pdk.Deck(
     map_style=map_style,
     initial_view_state=view_state,
-    layers=[hexagon_layer, chloropleth_layer, scatterplot_layer],
+    layers=[geojson_layer, chloropleth_layer, scatterplot_layer],
     height=800,
     width="80%",
     description="Social Vulnerability in Edmonton Neighbourhoods",
@@ -341,7 +345,7 @@ chart = alt.Chart(top_neighborhoods).mark_bar().encode(
 ).properties(
     title="Top 15 Neighborhoods by Weighted Score",
     width=600,
-    height=400
+    height=600
 ).configure_mark(
     color='steelblue'
 ).configure_axis(
@@ -351,11 +355,11 @@ chart = alt.Chart(top_neighborhoods).mark_bar().encode(
 
 st.divider()
 # Display the chart and dataframe with a divider in between
-col1, col2 = st.columns(2)
+col1, col2 = st.columns(2,)
 with col1:
-    st.dataframe(top_neighborhoods, width=600, height=400)
+    st.dataframe(top_neighborhoods, width=600, height=600)
 with col2:
-    st.altair_chart(chart)
+    st.altair_chart(chart,use_container_width=True)
 
 @st.cache_data
 def convert_df(df):
