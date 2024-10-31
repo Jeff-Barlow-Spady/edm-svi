@@ -130,6 +130,8 @@ else:
 st.title("Social Vulnerability in Edmonton Neighbourhoods: Creating an Index")
 st.markdown("""Analysis by Jeff Barlow-Spady""")    # Markdown text
 st.divider()
+st.warning("⚠️ **Important Notice**\n\nThis project was created for learning purposes and is my first project. I'm proud of what I learned and believe it has great potential. However, it requires further work, including drill-downs and the ability to explore the factors driving experiences of vulnerability.")
+
 # Sidebar text
 st.markdown(
 """

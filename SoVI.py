@@ -18,7 +18,6 @@ st.set_page_config(layout="wide",
     "Get Help":'mailto:jeff.barlow.spady@gmail.com', 
     'report a bug':'mailto:jeff.barlow.spady@gmail.com',
 })
-
 import matplotlib as plt
 st.sidebar.title("Map Options and Filters")
 st.sidebar.divider()
@@ -129,8 +128,11 @@ else:
 # Set up the Streamlit application
 st.title("Social Vulnerability in Edmonton Neighbourhoods: Creating an Index")
 st.markdown("""Analysis by Jeff Barlow-Spady""")    # Markdown text
+st.warning("⚠️ **Important Notice**\n\nThis project was created for learning purposes and is my first project. I'm proud of what I learned and believe it has great potential. However, it requires further work, including drill-downs and the ability to explore the factors driving experiences of vulnerability.")
+
 st.divider()
 # Sidebar text
+
 st.markdown(
 """
 This application is a working prototype of the Neighborhood Social Vulnerability Map and 
