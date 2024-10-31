@@ -136,7 +136,9 @@ st.warning("⚠️ **Important Notice**\n\nThis project was created for learning
 st.markdown(
 """
 This application is a working prototype of the Neighborhood Social Vulnerability Map and 
-Scoring System. A higher score indicates more risk of vulnerability
+Scoring System. 
+**Intended as a conversation starter for Neighbourhood residents and organizations**.
+A higher score indicates more risk of vulnerability
 wiithin a neighbourhood. Weighted score ranges from 5 to 16. 
 The weighted score is calculated by aggregating the scores of the factor loadings 
 and feature importance scores from the Random Forest and XGBoost models.
